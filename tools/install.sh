@@ -23,15 +23,9 @@ cat > "$BIN/$NAME" <<LAUNCH
 #!/bin/sh
 # Shadow Ant Farm launcher. Options: --resume, --seed N, --windowed, --operator, --fps 30|60, --live [DEST],
 # --soak HOURS, --capture DIR. See the operating guide.
-# Going live: use the X11 display path, which keeps drawing (and streaming) while the window is hidden or the
-# screen sleeps.
-case " \$* " in
-  *" --live"*) exec "$OPT/$NAME.x86_64" --display-driver x11 -- "\$@" ;;
-esac
-if grep -q '"auto": true' "\$HOME/.local/share/$NAME/settings.cfg" 2>/dev/null; then
-  exec "$OPT/$NAME.x86_64" --display-driver x11 -- "\$@"
-fi
-exec "$OPT/$NAME.x86_64" -- "\$@"
+# Always the X11 display path: it keeps drawing (and streaming) while the window is hidden behind other
+# windows or the screen sleeps; the Wayland path pauses a hidden window, which froze live streams.
+exec "$OPT/$NAME.x86_64" --display-driver x11 -- "\$@"
 LAUNCH
 chmod +x "$BIN/$NAME"
 cp -f "$ROOT/packaging/$NAME.svg" "$ICONS/scalable/apps/$NAME.svg"

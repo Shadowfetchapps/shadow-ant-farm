@@ -72,9 +72,9 @@ black because a screen share stopped.
   itself whenever the farm starts sending, which makes the whole thing hands-off.
 - **X:** once the source shows *connected* in Producer, start the broadcast there. X has no auto-start.
 
-When started with `--live` (or with *Go live automatically* ticked), the launcher uses the X11 display path. That
-path keeps drawing and streaming even while the farm window is hidden or the screen is asleep. When you go live
-from the operator window in a normal session, keep the farm visible on its monitor.
+The launcher always uses the X11 display path, which keeps drawing and streaming even while the farm window is
+behind other windows or the screen is asleep. The Wayland path pauses a hidden window, which would freeze a
+stream.
 
 What is sent: H.264 (NVIDIA NVENC, or x264 if NVENC isn't available), 30 fps, a keyframe every 2 s (every 3 s
 for X), constant bitrate, and AAC stereo at 48 kHz, 128 kb/s. It needs `ffmpeg` and `secret-tool`
