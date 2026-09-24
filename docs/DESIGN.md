@@ -41,12 +41,16 @@ dug; ants work around them.
 - Only an **exposed face** can be dug: intact, diggable material with an open 4-neighbour, within the worker's
   reach, in front of its mandibles. A face is **reserved** by the worker digging it, and at most two workers dig
   within four cells of each other; the rest queue.
-- Digging is **work-based**. A pellet takes about 11 s of reference-hardness work, scaled by hardness, moisture
+- Digging is **work-based**. A pellet takes about 9 s of reference-hardness work, scaled by hardness, moisture
   and the worker's strength. The worker then picks the pellet up, carries it out and drops it on a spoil pile.
 - **Volume is conserved exactly** with integer units: excavated = deposited + carried at every tick
-  (`conservation`). Spoil piles slump to a natural angle of repose (about 27°) without losing volume. A worker
-  that cannot get out in reasonable time packs its load into an old dead-end pocket instead (backfilling, which
-  real ants also do).
+  (`conservation`). Spoil piles slump to a natural angle of repose (about 27°) without losing volume.
+- **Backfilling.** Real colonies pack spoil into disused side passages, and so do these workers, in two cases:
+  - once the mounds fill more than about a third of the surface air, a growing share of carriers backfill;
+  - a carrier that can't get out in reasonable time also backfills.
+
+  Only abandoned dead-end pockets are filled, never a face being worked. This keeps the surface from being buried
+  on long runs and trims old side twigs, and the colony keeps digging elsewhere.
 - **Where to dig** is decided by local rules:
   - a passage is widened until it is 2–3 cells across, and only then advanced;
   - only the dead end of a passage advances (its neighbouring open cells must be the farthest from the exit

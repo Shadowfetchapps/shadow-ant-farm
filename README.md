@@ -5,7 +5,7 @@ A few hundred workers dig their own nest in layered soil, carry the spoil out to
 feeding stone the keeper tops up, rest, groom and wander. They do all of it one decision at a time. Nothing about
 the tunnels is scripted: every passage is the accumulated result of individual workers choosing where to dig.
 
-![Shadow Ant Farm at twelve hours](docs/images/farm-12h.png)
+![Shadow Ant Farm at twelve hours](docs/images/farm-12h.jpg)
 
 - **Native Linux.** Built with Godot 4.7.2-stable (pinned) and a C++ GDExtension. Runs offline and needs no editor.
 - **Fresh colony every launch.** Each launch draws a new seed from the operating system; `--seed N` reproduces a

@@ -207,7 +207,9 @@ bool World::isExcavatable(int x, int y) const
 	if (!inBounds(x, y) || x < 1 || x >= m_w - 1 || y >= m_h - 1)
 		return false;
 	const int i = index(x, y);
-	return m_remaining[size_t(i)] != 0 && !m_origAir[size_t(i)] && isDiggable(Material(m_material[size_t(i)]));
+	// Underground, packed spoil (backfill) can be dug out again; the loose mounds above ground are not dug.
+	const Material m = Material(m_material[size_t(i)]);
+	return m_remaining[size_t(i)] != 0 && !m_origAir[size_t(i)] && (isDiggable(m) || m == Material::Spoil);
 }
 
 bool World::isFace(int x, int y) const

@@ -74,6 +74,10 @@ func _ready() -> void:
 			"sim0": sim.get_sim_seconds(), "wall0": Time.get_ticks_msec() / 1000.0}
 	if args.has("operator"):
 		_toggle_operator()
+	if args.has("operator-shot") and operator:
+		get_tree().create_timer(4.0).timeout.connect(func():
+			operator.get_texture().get_image().save_png(String(args["operator-shot"]))
+			AppLog.info("operator window image saved to %s (window %s)" % [String(args["operator-shot"]), str(operator.size)]))
 	if args.has("run-seconds"):
 		get_tree().create_timer(float(args["run-seconds"]), true, false, true).timeout.connect(_quit_saving)
 

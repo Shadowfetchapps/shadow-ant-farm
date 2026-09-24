@@ -59,7 +59,7 @@ func _build_environment() -> void:
 	env.ambient_light_color = Color(0.66, 0.63, 0.6)
 	env.ambient_light_energy = 0.32
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.0
+	env.tonemap_exposure = 0.92
 	env.tonemap_white = 6.0
 	env.adjustment_enabled = true
 	env.adjustment_contrast = 1.04
@@ -70,7 +70,7 @@ func _build_environment() -> void:
 
 	key_light = DirectionalLight3D.new()
 	key_light.light_color = Color(1.0, 0.95, 0.87)
-	key_light.light_energy = 1.05
+	key_light.light_energy = 0.62
 	key_light.shadow_enabled = true
 	key_light.shadow_blur = 1.2
 	key_light.shadow_bias = 0.02
@@ -79,6 +79,19 @@ func _build_environment() -> void:
 	key_light.directional_shadow_max_distance = 40.0
 	add_child(key_light)
 	key_light.look_at_from_position(Vector3(-3.0, 4.0, 6.0), Vector3.ZERO, Vector3.UP)
+
+	# A lamp above and in front of the farm, off to the left: the gentle falloff across the glass that a
+	# photographed farm has.
+	var lamp := SpotLight3D.new()
+	lamp.light_color = Color(1.0, 0.93, 0.82)
+	lamp.light_energy = 7.0
+	lamp.spot_range = 40.0
+	lamp.spot_angle = 55.0
+	lamp.spot_attenuation = 1.2
+	lamp.spot_angle_attenuation = 1.6
+	lamp.shadow_enabled = false
+	add_child(lamp)
+	lamp.look_at_from_position(Vector3(-2.8, 3.6, 7.5), Vector3(0.6, -0.4, 0.0), Vector3.UP)
 
 	var fill := DirectionalLight3D.new()
 	fill.light_color = Color(0.9, 0.92, 1.0)

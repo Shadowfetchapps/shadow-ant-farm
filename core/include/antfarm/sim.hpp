@@ -133,6 +133,7 @@ struct Stats {
 	int64_t openUndergroundCells = 0;
 	int entrances = 0;
 	int activeTips = 0;
+	float spoilPressure = 0;
 	std::array<int, 8> diag{};
 	std::array<int, 6> stuckKinds{}; ///< diagnostics: {carrier, other} x {below free, below traffic, above}
 	int maxDepth = 0;                 ///< deepest open cell below the original surface
@@ -248,6 +249,7 @@ private:
 	float m_digDemand = 1, m_foodNeed = 0;
 	float m_occupancy = 0; ///< workers underground per available space (derived each tick)
 	int m_activeTips = 0;
+	float m_spoilPressure = 0; ///< share of the surface air taken by mounds, above a threshold (drives backfilling)
 	std::array<int, 6> m_stuckKinds{};
 	std::array<int, 8> m_diag{}; ///< diagnostics only (not part of the logical state) ///< 16-cell regions with a live dig-site mark (derived; recomputed on load)
 	bool m_exitDirty = true;

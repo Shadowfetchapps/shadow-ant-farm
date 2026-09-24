@@ -24,9 +24,9 @@ var _fps_option: OptionButton
 
 func _init() -> void:
 	title = "Shadow Ant Farm — Operator"
-	size = Vector2i(520, 760)
+	size = Vector2i(560, 780)
 	min_size = Vector2i(460, 640)
-	wrap_controls = true
+	wrap_controls = false
 	transient = false
 	exclusive = false
 	unresizable = false
@@ -52,6 +52,7 @@ func build(settings: Dictionary) -> void:
 	_status = Label.new()
 	_status.add_theme_font_size_override("font_size", 13)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_status.custom_minimum_size = Vector2(470, 0)
 	box.add_child(_status)
 
 	var row := HBoxContainer.new()
@@ -101,6 +102,7 @@ func build(settings: Dictionary) -> void:
 	var warn := Label.new()
 	warn.text = "This replaces the running colony with a fresh one (its last checkpoint is kept). Type NEW COLONY to confirm."
 	warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	warn.custom_minimum_size = Vector2(470, 0)
 	_confirm_new.add_child(warn)
 	_new_edit = LineEdit.new()
 	_new_edit.placeholder_text = "NEW COLONY"
@@ -132,6 +134,7 @@ func build(settings: Dictionary) -> void:
 	var hint := Label.new()
 	hint.text = "F2 in the farm window shows or hides this window. Closing it does not stop the farm."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.custom_minimum_size = Vector2(470, 0)
 	hint.modulate = Color(1, 1, 1, 0.6)
 	box.add_child(hint)
 	close_requested.connect(func(): hide())

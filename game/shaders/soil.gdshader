@@ -66,8 +66,8 @@ vec3 material_colour(int m, float v) {
 	if (m == 1) return mix(vec3(0.36, 0.265, 0.165), vec3(0.45, 0.34, 0.21), v);  // sand
 	if (m == 2) return mix(vec3(0.19, 0.13, 0.08), vec3(0.26, 0.18, 0.115), v);   // loam
 	if (m == 3) return mix(vec3(0.28, 0.185, 0.12), vec3(0.34, 0.23, 0.15), v);   // clay
-	if (m == 4) return mix(vec3(0.27, 0.235, 0.19), vec3(0.36, 0.31, 0.25), v);   // gravel
-	if (m == 5) return mix(vec3(0.15, 0.13, 0.11), vec3(0.24, 0.21, 0.18), v);    // stone
+	if (m == 4) return mix(vec3(0.27, 0.215, 0.16), vec3(0.35, 0.285, 0.21), v);   // gravel
+	if (m == 5) return mix(vec3(0.16, 0.13, 0.10), vec3(0.25, 0.20, 0.155), v);   // stone
 	if (m == 6) return mix(vec3(0.14, 0.09, 0.055), vec3(0.2, 0.13, 0.08), v);    // root
 	if (m == 7) return mix(vec3(0.29, 0.21, 0.135), vec3(0.38, 0.28, 0.18), v);   // spoil
 	return vec3(0.24, 0.17, 0.11);
@@ -155,7 +155,7 @@ void fragment() {
 	if (m == 4) { // gravel: pebbles with their own shading
 		vec3 pb = grains(cellp * 1.1);
 		float pebble = smoothstep(0.42, 0.30, pb.x);
-		vec3 pc = mix(vec3(0.25, 0.22, 0.18), vec3(0.40, 0.36, 0.30), pb.z);
+		vec3 pc = mix(vec3(0.24, 0.19, 0.14), vec3(0.37, 0.30, 0.22), pb.z);
 		soil = mix(soil, pc * (0.8 + 0.4 * (1.0 - pb.x)), pebble);
 	}
 	if (m == 5) { // embedded stones: smooth, rounded, darker than the soil around them

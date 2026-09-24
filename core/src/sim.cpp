@@ -116,6 +116,8 @@ bool Simulation::init(const SimConfig &cfg, uint64_t seed)
 	m_entrances.clear();
 	m_anchors.clear();
 	m_digDemand = 1;
+	m_activeTips = 0;
+	m_spoilPressure = 0;
 	m_foodNeed = 0;
 	m_exitDirty = true;
 	m_lastExit = -10;
@@ -477,6 +479,19 @@ void Simulation::updateColony(float dt)
 	m_stationY = float(m_world.groundTop(int(m_stationX)) - 1);
 	updateEntrances();
 	countActiveTips();
+	{
+		// Spoil pressure: how much of the surface air is taken by mounds (0 until mounds pass 35% of it).
+		double fill = 0;
+		int n = 0;
+		for (int x = 4; x < m_world.width() - 4; x += 4) {
+			const int surf = m_world.originalSurface(x);
+			const float room = float(surf - m_cfg.lidRows);
+			fill += std::clamp(float(surf - m_world.groundTop(x)) / std::max(1.0f, room), 0.0f, 1.0f);
+			++n;
+		}
+		const float mean = n ? float(fill / n) : 0.0f;
+		m_spoilPressure = std::clamp((mean - 0.35f) / 0.25f, 0.0f, 1.0f);
+	}
 	if (seconds() - m_lastStore > 300.0 || m_storeX < 0) {
 		pickStorePoint();
 		m_lastStore = seconds();
@@ -590,6 +605,8 @@ int Simulation::findBackfillCell(const Ant &a) const
 	// An open underground cell next to the worker's head that is a dead-end pocket (soil on three sides),
 	// away from the entrances, and not occupied: filling it cannot cut a passage.
 	const int hx = int(headX(a)), hy = int(headY(a));
+	// A worker shut in a pocket cut off from the exit leaves its load right there.
+	const bool sealed = m_exit.at(int(a.x), int(a.y)) == ExitDistance::kUnreachable && !m_exitDirty;
 	for (int r = 1; r <= 2; ++r)
 		for (int dy = -r; dy <= r; ++dy)
 			for (int dx = -r; dx <= r; ++dx) {
@@ -599,7 +616,10 @@ int Simulation::findBackfillCell(const Ant &a) const
 				if (!m_world.isOpen(x, y) || m_world.isAboveGround(x, y) || (x == int(a.x) && y == int(a.y)))
 					continue;
 				const uint16_t d = m_exit.at(x, y);
-				if (d == ExitDistance::kUnreachable || d < 12)
+				if (!sealed && (d == ExitDistance::kUnreachable || d < 12))
+					continue;
+				// Not the face being worked right now: only abandoned pockets are filled.
+				if (m_siteTrail.sample(float(x), float(y)) > m_cfg.siteThreshold)
 					continue;
 				int solid4 = 0, open8 = 0;
 				for (int qy = -1; qy <= 1; ++qy)
@@ -783,6 +803,7 @@ bool Simulation::trySelectFace(Ant &a)
 		for (int qx = -8; qx <= 8; qx += 2)
 			siteMax = std::max(siteMax, m_siteTrail.sample(a.x + float(qx), a.y + float(qy)));
 	const bool hasMemory = a.memAge < 900;
+	const bool sealed = !above && m_exit.at(int(a.x), int(a.y)) == ExitDistance::kUnreachable && !m_exitDirty;
 	// Only a worker with no face of its own and no active site nearby may start a branch.
 	const bool frustrated = a.stateTime > 25.0f && a.load == Load::None && siteMax < m_cfg.siteThreshold;
 	const int maxTips = 2 + int(std::min(8.0, seconds() / 5400.0));
@@ -876,7 +897,9 @@ bool Simulation::trySelectFace(Ant &a)
 				// Gallery shape: a passage is widened until it is two or three cells across, and only then
 				// advanced; soil separating it from other open space is not broken through (rare junctions).
 				(void)tipGeom;
-				if (tunnelShapeAllows(a, cx, cy, ux, uy, chamberMode))
+				if (sealed)
+					reason = 0; // cut off from the exit: dig out through whatever is in the way
+				else if (tunnelShapeAllows(a, cx, cy, ux, uy, chamberMode))
 					reason = own ? 3 : inSite ? 4 : 0;
 				else if (branchAllowed && branchHasRoom(cx, cy, ux, uy))
 					reason = 5;
@@ -1175,17 +1198,30 @@ void Simulation::decideMovement(Ant &a)
 	// Task-level decisions that happen where the worker is.
 	if (a.activeTimer <= 0 && a.load == Load::None && a.task != Task::Rest)
 		chooseTask(a);
+	// Shut in a pocket that no longer connects to the exit: whatever it was doing, it digs its way out.
+	if (!above && a.load == Load::None && a.task != Task::Dig && a.stateTime > 60.0f && !m_exitDirty &&
+	    m_exit.at(int(a.x), int(a.y)) == ExitDistance::kUnreachable) {
+		a.task = Task::Dig;
+		a.memAge = 1e9f;
+		setState(a, AntState::Explore);
+		return;
+	}
 	if (a.state == AntState::CarrySoilOut && above) {
 		if (a.goalX < 0)
 			a.goalX = chooseDepositColumn(a);
 		const int gt = m_world.groundTop(int(a.x));
-		if (std::fabs(a.x - a.goalX) < 1.5f && a.y >= float(gt) - 3.0f) {
+		// At the chosen spot, or (after a long search on a steep, crowded mound) wherever it is: the pellet
+		// is dropped and rolls onto the pile below.
+		if ((std::fabs(a.x - a.goalX) < 1.5f && a.y >= float(gt) - 3.0f) || a.stateTime > 150.0f) {
 			setState(a, AntState::DepositSoil);
 			a.actionTime = a.rng.range(0.6f, 1.2f);
 			return;
 		}
 	}
-	if (a.state == AntState::CarrySoilOut && !above && a.stateTime > 240.0f && a.rng.chance(0.2f)) {
+	// Backfilling: a long way out with no progress, or the surface is crowded with spoil. Real colonies
+	// pack excavated soil into disused side passages; it keeps the mounds from burying the surface.
+	if (a.state == AntState::CarrySoilOut && !above &&
+	    ((a.stateTime > 240.0f && a.rng.chance(0.2f)) || (m_spoilPressure > 0.0f && a.rng.chance(0.08f * m_spoilPressure)))) {
 		// A long way out with no progress: pack the load into a nearby dead end instead (backfilling).
 		const int cell = findBackfillCell(a);
 		if (cell >= 0) {
@@ -1635,6 +1671,7 @@ Stats Simulation::stats() const
 	s.storedFood = m_storedFood;
 	s.digDemand = m_digDemand;
 	s.activeTips = m_activeTips;
+	s.spoilPressure = m_spoilPressure;
 	s.stuckKinds = m_stuckKinds;
 	s.diag = m_diag;
 	s.foodNeed = m_foodNeed;
@@ -1724,6 +1761,7 @@ std::vector<uint8_t> Simulation::saveCheckpoint() const
 	w.pod(m_storeY);
 	w.pod(m_digDemand);
 	w.pod(m_activeTips);
+	w.pod(m_spoilPressure);
 	w.pod(m_foodNeed);
 	w.pod(m_lastExit);
 	w.pod(m_lastTrail);
@@ -1811,6 +1849,7 @@ bool Simulation::loadCheckpoint(const std::vector<uint8_t> &data, std::string *e
 	s.m_storeY = r.pod<float>();
 	s.m_digDemand = r.pod<float>();
 	s.m_activeTips = r.pod<int>();
+	s.m_spoilPressure = r.pod<float>();
 	s.m_foodNeed = r.pod<float>();
 	s.m_lastExit = r.pod<double>();
 	s.m_lastTrail = r.pod<double>();

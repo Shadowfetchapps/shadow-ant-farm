@@ -288,7 +288,7 @@ int main(int argc, char **argv)
 	}
 	const Stats fin = s.stats();
 	std::printf("face search: calls %d no-face-in-reach %d crowded %d none-acceptable %d declined %d started %d\n", fin.diag[0], fin.diag[1], fin.diag[2], fin.diag[3], fin.diag[4], fin.diag[5]);
-	std::printf("deposits %d backfills %d\n", fin.deposits, fin.backfills);
+	std::printf("deposits %d backfills %d spoil pressure %.2f\n", fin.deposits, fin.backfills, fin.spoilPressure);
 	std::printf("active tips at end: %d\n", fin.activeTips);
 	std::printf("stuck: carrier below/free %d below/traffic %d above %d; other below/free %d below/traffic %d above %d\n", fin.stuckKinds[0], fin.stuckKinds[1], fin.stuckKinds[2], fin.stuckKinds[3], fin.stuckKinds[4], fin.stuckKinds[5]);
 	std::printf("dig selections: lump %d, surface %d, own face %d, active site %d, branch %d\n", fin.digReasons[1], fin.digReasons[2],

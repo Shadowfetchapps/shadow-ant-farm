@@ -31,7 +31,7 @@ struct SimConfig {
 	// ---- excavation and material ----
 	int cellVolume = 256;             ///< integer volume units per cell (exact accounting)
 	int pelletVolume = 256;           ///< volume units one worker carries per trip (one cell: about an ant head)
-	float digSecondsPerPellet = 11.0f; ///< work time for a pellet of reference-hardness soil
+	float digSecondsPerPellet = 9.0f;  ///< work time for a pellet of reference-hardness soil
 	float digReach = 1.6f;            ///< cells from the head to a face that can be worked
 	int maxFacesConsidered = 10;
 	int maxDiggersPerFace = 2;        ///< workers digging within 4 cells of one another
