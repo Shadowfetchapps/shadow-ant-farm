@@ -40,7 +40,8 @@ if(ANTFARM_BUILD_EXTENSION)
   add_library(antfarm_gdext SHARED
     extension/src/register_types.cpp
     extension/src/ant_farm_sim.cpp
-    extension/src/ant_audio.cpp)
+    extension/src/ant_audio.cpp
+    extension/src/ant_live_stream.cpp)
   target_link_libraries(antfarm_gdext PRIVATE antfarm_core godot-cpp)
   target_compile_options(antfarm_gdext PRIVATE ${ANTFARM_FP_FLAGS})
   set_target_properties(antfarm_gdext PROPERTIES

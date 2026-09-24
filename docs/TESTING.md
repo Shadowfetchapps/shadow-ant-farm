@@ -18,6 +18,7 @@ Machine: AMD Ryzen 7 5700G, NVIDIA GeForce RTX 5060 Ti, Pop!_OS with the COSMIC 
 | Resource bounds | Simulation memory constant over 24 h (`pacing_24h`); event queue fixed size; checkpoint and log retention bounded | Pass |
 | Headless accelerated mode | `--headless-test` through the extension and the exported binary | Pass |
 | Capture | Window identity, 4K frame times, encoded-capture check | See below |
+| Live streaming | Local RTMP server: picture, sound, sync, reconnect, refused server, keyring | Pass (see below) |
 | Real-time 24-hour soak | `--soak 24` | **Not run.** It needs 24 real hours (see the end of this report). |
 
 Run the core suite with `build/antfarm_tests`. It takes about 20 minutes, most of it the three 24-hour pacing
@@ -113,6 +114,26 @@ What was checked, and fixed where needed, during development:
   - 35 of 824 events (4%) were dropped by the rate limiter at that level of activity.
 - **Operator window:** renders at 560 × 780. It shows status, save buttons, the frame-rate preset, six volume
   sliders and the guarded *new colony* and *quit* actions.
+
+## Live streaming (1.1.0)
+
+Tested against a local RTMP server (`ffmpeg -listen 1 …`, 127.0.0.1), so nothing was broadcast publicly. Each run
+used the 12-hour colony, and the display was asleep during testing (X11 display path).
+
+| Check | Result |
+|---|---|
+| What arrives at the server | H.264 1280×720 at 30 fps, 4.0 Mb/s CBR, a keyframe every 2.0 s; AAC 48 kHz stereo at 128 kb/s |
+| Picture | The farm itself: 53 samples over 28 s, mean brightness 116, **0 black** |
+| Sound | Present: mean −35 dB, peak −16 dB |
+| Timing | 1,138 frames in 37.9 s (30.0 fps), no gaps over 50 ms; video 0.02–37.92 s and audio 0.00–37.95 s (in step) |
+| Server drops the connection | It dropped at 8 s. The farm reported *Connection lost* and was **live again 5 s later** without help |
+| Server refuses every connection (as with a wrong key or address) | Retried with back-off, then stopped after about 35 s with "The server keeps closing the connection straight away. Check the stream key and the server address…" |
+| Cost to the farm | Held a flat 60 fps with no dropped ticks while streaming |
+| Keyring | Save, look up and clear a key through `secret-tool`; the test entry was removed afterwards. Starting without a key gives a clear message |
+| Live to YouTube or X | **Not tested here:** that needs the user's own stream key, entered by the user |
+
+An earlier build skipped ahead after ffmpeg's start-up stall, which put the sound 1.2 s ahead of the picture. The
+writers now catch up instead of skipping, so the picture and sound timelines always equal real time.
 
 ## Real-time 24-hour soak
 

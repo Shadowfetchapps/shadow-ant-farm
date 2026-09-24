@@ -16,6 +16,9 @@ the tunnels is scripted: every passage is the accumulated result of individual w
   accounting (excavated = deposited + carried). Spoil forms mounds that slump at a natural angle.
 - **Procedural 48 kHz stereo sound** made from simulation events (digging scrapes, crumbling pellets, trickling
   spoil, footfalls). It is voice- and rate-limited and uses no recorded samples.
+- **Goes live by itself.** Built-in streaming to YouTube, X or any RTMP server, from the farm's own picture and
+  sound (no screen capture). Set the key once; then *Resume and go live* (or `--live`) starts and reconnects on its
+  own. With YouTube's Auto-start it's fully hands-off.
 - **Stream-safe.** The capture image is clean: no cursor or overlays, and no error pop-ups. The window identity is
   stable, the app keeps running when unfocused, and the screen is kept awake. It never touches the camera or
   microphone. A separate operator window guards the new-colony and quit actions.

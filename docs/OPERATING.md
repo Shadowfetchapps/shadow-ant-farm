@@ -12,8 +12,9 @@
 | `shadow-ant-farm --windowed` | Run in a 1600 × 900 window instead of full screen |
 | `shadow-ant-farm --fps 30` | Lighter 30 FPS preset (default 60; also switchable in the operator window) |
 | `shadow-ant-farm --config FILE` | Simulation tuning file (`key = value` lines; see `core/include/antfarm/config.hpp`) |
+| `shadow-ant-farm --live [youtube\|x\|custom]` | Go live at start (see *Going live*) |
 
-The desktop entry also offers *Resume last colony*, *Resume with operator window* and *New colony in a window*.
+The desktop entry also offers *Resume last colony*, *Resume and go live*, *Resume with operator window* and *New colony in a window*.
 
 **Quit** from the operator window: press *Quit…*, then press it again within 5 seconds. Closing the farm window
 through the desktop (for example Super+Q) also saves a checkpoint first. Nothing on the farm window itself quits
@@ -44,21 +45,47 @@ A separate desktop window (it never draws over the farm) showing:
 
 Closing the operator window only hides it; the farm keeps running.
 
-## Using it with Shadow Recorder (or any capture tool)
+## Going live (built in)
 
-- The farm window has a stable identity: Wayland app id `Shadow Ant Farm` (it runs as a native Wayland client), title
-  `Shadow Ant Farm`. The operator window's title is `Shadow Ant Farm — Operator`, so a window-capture source can
-  select the farm alone.
-- Capture the farm window, or the monitor it is full screen on. Keep the farm visible on its monitor while
-  streaming. The simulation keeps to real time whatever happens: when the desktop hides or blanks the window, the
-  compositor slows its frames, and the farm catches up on the next frame without losing time. The picture a
-  capture tool receives, however, can only be as fresh as the frames the compositor lets the farm draw.
-- The farm keeps running when it isn't focused, and it keeps the screen awake (idle inhibit) while running.
-- It never opens a camera or microphone, and it doesn't change any streaming configuration. It doesn't talk to
-  Shadow Recorder at all.
-- Sound plays through the default output at 48 kHz stereo. Capture the farm's audio stream (application
-  "Shadow Ant Farm") or desktop audio.
-- At 1080p/6 Mb/s H.264 the ants survive encoding: see [TESTING.md](TESTING.md#encoded-capture).
+The farm streams itself to YouTube, X or any RTMP/RTMPS server. It sends its own rendered picture and its own
+sound, so there's no screen capture: nothing else on your desktop can end up in the stream, and it can never go
+black because a screen share stopped.
+
+**Set up once, in the operator window (F2) → Live stream:**
+
+1. Choose **Stream to**: YouTube, X or Custom RTMP.
+2. For **X** or **Custom**, paste the **server address**. For X, use the RTMPS address shown for *your* source in
+   Media Studio → Producer → Sources, because sources live on different servers (`ca.`, `va.` and so on).
+   YouTube needs no address.
+3. Paste the **stream key** and press **Save key**. It goes into your desktop keyring (`secret-tool`), never into
+   files or logs.
+4. Choose the **Quality**: 720p at 4 Mb/s (recommended) or 1080p at 7 Mb/s.
+5. Optionally tick **Go live automatically whenever the farm starts**.
+
+**Going live:**
+
+- Press **Go live** in the operator window, or use the app menu's **Resume and go live**, or run
+  `shadow-ant-farm --resume --live` (`--live youtube` / `--live x` picks the destination).
+- The status shows **● LIVE** with the uptime and bitrate. If the connection drops, the farm reconnects by
+  itself. If the server keeps refusing it (a wrong key or address), it stops after five tries and says so.
+- **YouTube:** in YouTube Studio → Stream settings, turn on **Auto-start** once. YouTube then goes public by
+  itself whenever the farm starts sending, which makes the whole thing hands-off.
+- **X:** once the source shows *connected* in Producer, start the broadcast there. X has no auto-start.
+
+When started with `--live` (or with *Go live automatically* ticked), the launcher uses the X11 display path. That
+path keeps drawing and streaming even while the farm window is hidden or the screen is asleep. When you go live
+from the operator window in a normal session, keep the farm visible on its monitor.
+
+What is sent: H.264 (NVIDIA NVENC, or x264 if NVENC isn't available), 30 fps, a keyframe every 2 s (every 3 s
+for X), constant bitrate, and AAC stereo at 48 kHz, 128 kb/s. It needs `ffmpeg` and `secret-tool`
+(`sudo apt install ffmpeg libsecret-tools`).
+
+## Capturing the window with another tool
+
+- The farm window has a stable identity: Wayland app id `Shadow Ant Farm`, title `Shadow Ant Farm`. The operator
+  window is titled `Shadow Ant Farm — Operator`.
+- It never opens a camera or microphone. It keeps the screen awake while running and keeps running when
+  unfocused.
 
 ## Where things are kept
 

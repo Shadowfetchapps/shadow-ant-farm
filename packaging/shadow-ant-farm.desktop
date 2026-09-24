@@ -12,11 +12,15 @@ Categories=Game;Simulation;
 Keywords=ant;ants;farm;formicarium;colony;stream;ambient;
 StartupNotify=true
 StartupWMClass=Shadow Ant Farm
-Actions=resume;operator;windowed;
+Actions=resume;live;operator;windowed;
 
 [Desktop Action resume]
 Name=Resume last colony
 Exec=@BIN@ --resume
+
+[Desktop Action live]
+Name=Resume and go live
+Exec=@BIN@ --resume --live --operator
 
 [Desktop Action operator]
 Name=Resume with operator window

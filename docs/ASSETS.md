@@ -22,6 +22,8 @@ streamed and recorded use.
 |---|---|---|---|
 | [Godot Engine](https://godotengine.org) | 4.7.2-stable (official build and export templates) | MIT | Engine and runtime; its own third-party notices ship with Godot |
 | [godot-cpp](https://github.com/godotengine/godot-cpp) | 10.0.0-stable (git submodule, commit `507ed9d`) | MIT | C++ bindings for the GDExtension |
+| ffmpeg (system package, run as a separate program for live streaming) | system | LGPL/GPL (as packaged by the distribution) | Encoding and RTMP/RTMPS output; not bundled |
+| secret-tool (libsecret, system package) | system | LGPL-2.1+ | Stores stream keys in the desktop keyring; not bundled |
 | C++ standard library (GCC libstdc++) | system | GPL-3.0 with the GCC Runtime Library Exception | Standard runtime |
 
 No fonts, textures, audio files, models or data sets are downloaded or bundled.

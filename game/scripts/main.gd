@@ -17,6 +17,8 @@ extends Node
 ##   --render-size WxH     render the farm offscreen at this size (shown scaled in the window)
 ##   --headless-test HOURS run the core checks through the extension without rendering, then exit
 ##   --run-seconds N       run normally for N real seconds, then save and quit (automation)
+##   --live [DEST]         go live at start (DEST: youtube, x or custom; default: the saved destination)
+##   --live-url URL        go live to this full RTMP/RTMPS URL (key included), without the keyring (testing)
 
 const CHECKPOINT_INTERVAL := 600.0
 const MAX_TICKS_PER_FRAME := 60  ## up to 2 s of catch-up if the compositor throttles frames (hidden window)
@@ -24,6 +26,7 @@ const MAX_TICKS_PER_FRAME := 60  ## up to 2 s of catch-up if the compositor thro
 var sim := AntFarmSim.new()
 var view: FarmView
 var audio: AudioEngine
+var live: LiveStream
 var store: CheckpointStore
 var operator: OperatorWindow
 var args := {}
@@ -78,6 +81,7 @@ func _ready() -> void:
 		get_tree().create_timer(4.0).timeout.connect(func():
 			operator.get_texture().get_image().save_png(String(args["operator-shot"]))
 			AppLog.info("operator window image saved to %s (window %s)" % [String(args["operator-shot"]), str(operator.size)]))
+	_maybe_go_live()
 	if args.has("run-seconds"):
 		get_tree().create_timer(float(args["run-seconds"]), true, false, true).timeout.connect(_quit_saving)
 
@@ -112,6 +116,7 @@ func _load_settings() -> void:
 		settings["fps"] = cf.get_value("display", "fps", 60)
 		settings["master"] = cf.get_value("audio", "master", 0.9)
 		settings["volumes"] = cf.get_value("audio", "volumes", {})
+		settings["live"] = cf.get_value("live", "config", {"destination": "youtube", "servers": {}, "quality": 0, "auto": false})
 	if args.has("fps"):
 		settings["fps"] = int(args["fps"])
 
@@ -121,6 +126,8 @@ func _save_settings() -> void:
 	cf.set_value("display", "fps", settings.get("fps", 60))
 	cf.set_value("audio", "master", settings.get("master", 0.9))
 	cf.set_value("audio", "volumes", settings.get("volumes", {}))
+	if settings.has("live"):
+		cf.set_value("live", "config", settings["live"])
 	cf.save("user://settings.cfg")
 
 
@@ -136,6 +143,23 @@ func _configure_window() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	DisplayServer.screen_set_keep_on(true)
 	_apply_fps(int(settings.get("fps", 60)))
+
+
+func _maybe_go_live() -> void:
+	if args.has("capture"):
+		return
+	var wanted := args.has("live") or args.has("live-url") or bool(live.config().get("auto", false))
+	if not wanted:
+		return
+	if args.has("live") and args["live"] is String and LiveStream.DESTINATIONS.has(String(args["live"])):
+		live.config()["destination"] = String(args["live"])
+		_save_settings()
+	# Streaming from the farm's own frames: under X11 the farm keeps drawing even when its window is hidden or the
+	# screen sleeps, and nothing needs to wait for the display's refresh.
+	if DisplayServer.get_name() == "X11":
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	# Give the first frames a moment to render before connecting.
+	get_tree().create_timer(2.0).timeout.connect(func(): live.start(String(args.get("live-url", ""))))
 
 
 func _apply_fps(fps: int) -> void:
@@ -196,6 +220,10 @@ func _build_presentation() -> void:
 	audio.synth.set_master_volume(float(settings.get("master", 0.9)))
 	if args.has("capture") or args.has("bench"):
 		audio.synth.set_master_volume(0.0)
+	live = LiveStream.new()
+	add_child(live)
+	live.setup(view, settings)
+	audio.tap = live.push_audio
 
 
 # ---- running ------------------------------------------------------------------------------------
@@ -225,6 +253,8 @@ func _process(delta: float) -> void:
 		_walkers = int(st.get("ants", 0)) - int(states.get("REST", 0)) - int(states.get("EXCAVATE", 0)) - int(states.get("GROOM", 0))
 		if operator and operator.visible:
 			operator.set_status(_status_text(st))
+			if live:
+				operator.set_live_status(live.status())
 	if args.has("capture"):
 		return
 	_since_checkpoint += delta
@@ -246,7 +276,11 @@ func _process(delta: float) -> void:
 
 func _status_text(st: Dictionary) -> String:
 	var h := float(st.get("seconds", 0.0)) / 3600.0
-	return "Seed %016x   simulated %d h %02d min\nAnts %d   excavated %.2f %%   deepest %d cells   entrances %d\nCarrying soil %d   food on the stone %d   stored %d\nFPS %d   dropped ticks %d   stuck recoveries %d\nMemory %.0f MB   log %s" % [
+	var live_line := ""
+	if live:
+		var ls := live.status()
+		live_line = "\nLive: %s%s" % [String(ls.get("state", "idle")).replace("idle", "off"), (" · %.1f Mb/s" % (float(ls.get("kbps", 0.0)) / 1000.0)) if String(ls.get("state", "")) == "live" else ""]
+	return live_line.strip_edges() + ("\n" if not live_line.is_empty() else "") + "Seed %016x   simulated %d h %02d min\nAnts %d   excavated %.2f %%   deepest %d cells   entrances %d\nCarrying soil %d   food on the stone %d   stored %d\nFPS %d   dropped ticks %d   stuck recoveries %d\nMemory %.0f MB   log %s" % [
 		sim.get_seed(), int(h), int(fmod(h * 60.0, 60.0)), st.get("ants", 0), float(st.get("excavated_fraction", 0.0)) * 100.0,
 		st.get("max_depth", 0), st.get("entrances", 0), st.get("carrying_soil", 0), st.get("station_food", 0), st.get("stored_food", 0),
 		Engine.get_frames_per_second(), st.get("dropped_ticks", 0), st.get("stuck_recoveries", 0),
@@ -275,6 +309,8 @@ func _notification(what: int) -> void:
 
 
 func _quit_saving() -> void:
+	if live:
+		live.stop()
 	if sim.is_running() and not args.has("capture") and not args.has("bench"):
 		_checkpoint()
 	_save_settings()
@@ -286,7 +322,8 @@ func _toggle_operator() -> void:
 	if operator == null:
 		operator = OperatorWindow.new()
 		add_child(operator)
-		operator.build(settings)
+		operator.build(settings, live)
+		operator.live_settings_changed.connect(_save_settings)
 		operator.save_requested.connect(func(): _checkpoint())
 		operator.screenshot_requested.connect(_save_screenshot)
 		operator.quit_requested.connect(_quit_saving)

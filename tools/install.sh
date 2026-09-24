@@ -12,13 +12,25 @@ ICONS="$HOME/.local/share/icons/hicolor"
 [[ -x "$SRC/$NAME.x86_64" ]] || { echo "Build first: tools/build.sh" >&2; exit 1; }
 mkdir -p "$OPT" "$BIN" "$APPS" "$ICONS/scalable/apps"
 # Replace the program files only; the colony checkpoints and settings live in ~/.local/share/shadow-ant-farm.
-cp -f "$SRC/$NAME.x86_64" "$SRC/libantfarm.so" "$OPT/"
+# Copy under temporary names, then rename into place: a farm that is running keeps its old files intact.
+for f in "$NAME.x86_64" libantfarm.so; do
+	cp -f "$SRC/$f" "$OPT/.$f.new"
+	mv -f "$OPT/.$f.new" "$OPT/$f"
+done
 cp -f "$ROOT/packaging/$NAME.svg" "$OPT/"
 chmod +x "$OPT/$NAME.x86_64"
 cat > "$BIN/$NAME" <<LAUNCH
 #!/bin/sh
-# Shadow Ant Farm launcher. Options: --resume, --seed N, --windowed, --operator, --fps 30|60,
+# Shadow Ant Farm launcher. Options: --resume, --seed N, --windowed, --operator, --fps 30|60, --live [DEST],
 # --soak HOURS, --capture DIR. See the operating guide.
+# Going live: use the X11 display path, which keeps drawing (and streaming) while the window is hidden or the
+# screen sleeps.
+case " \$* " in
+  *" --live"*) exec "$OPT/$NAME.x86_64" --display-driver x11 -- "\$@" ;;
+esac
+if grep -q '"auto": true' "\$HOME/.local/share/$NAME/settings.cfg" 2>/dev/null; then
+  exec "$OPT/$NAME.x86_64" --display-driver x11 -- "\$@"
+fi
 exec "$OPT/$NAME.x86_64" -- "\$@"
 LAUNCH
 chmod +x "$BIN/$NAME"

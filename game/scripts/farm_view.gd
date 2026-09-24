@@ -110,7 +110,11 @@ func _build_environment() -> void:
 func _fit_camera() -> void:
 	if camera == null:
 		return
-	var vp := get_viewport().get_visible_rect().size
+	fit_camera_to(camera, get_viewport().get_visible_rect().size)
+
+
+## Places `cam` so the farm fills a view of `vp` pixels (the window, or the live-stream picture).
+func fit_camera_to(cam: Camera3D, vp: Vector2) -> void:
 	if vp.y <= 0:
 		return
 	var aspect := vp.x / vp.y
@@ -119,9 +123,9 @@ func _fit_camera() -> void:
 	# Fill the screen with the farm: the frame may be cropped a little at the edges, never the soil.
 	var half_h: float = max(inner.y * 0.5 + FRAME_W * 0.45, (inner.x * 0.5 + FRAME_W * 0.45) / aspect)
 	half_h = min(half_h, max(outer.y * 0.5, outer.x * 0.5 / aspect))
-	var dist := half_h / tan(deg_to_rad(camera.fov * 0.5))
-	camera.position = Vector3(0.0, 0.0, dist + GLASS_Z)
-	camera.look_at(Vector3(0.0, 0.0, 0.0), Vector3.UP)
+	var dist := half_h / tan(deg_to_rad(cam.fov * 0.5))
+	cam.position = Vector3(0.0, 0.0, dist + GLASS_Z)
+	cam.look_at(Vector3(0.0, 0.0, 0.0), Vector3.UP)
 
 
 func _build_soil() -> void:

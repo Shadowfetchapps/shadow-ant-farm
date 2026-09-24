@@ -1,5 +1,6 @@
 #include "ant_audio.h"
 #include "ant_farm_sim.h"
+#include "ant_live_stream.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
@@ -14,6 +15,7 @@ static void initialize_antfarm(ModuleInitializationLevel level)
 		return;
 	GDREGISTER_CLASS(AntFarmSim);
 	GDREGISTER_CLASS(AntAudioSynth);
+	GDREGISTER_CLASS(AntLiveStream);
 }
 
 static void uninitialize_antfarm(ModuleInitializationLevel level)
