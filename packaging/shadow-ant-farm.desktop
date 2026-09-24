@@ -1,0 +1,27 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Shadow Ant Farm
+GenericName=Ant Farm
+Comment=A photorealistic glass ant farm that digs its own nest, made for long streams
+Exec=@BIN@
+TryExec=@BIN@
+Icon=shadow-ant-farm
+Terminal=false
+Categories=Game;Simulation;
+Keywords=ant;ants;farm;formicarium;colony;stream;ambient;
+StartupNotify=true
+StartupWMClass=Shadow Ant Farm
+Actions=resume;operator;windowed;
+
+[Desktop Action resume]
+Name=Resume last colony
+Exec=@BIN@ --resume
+
+[Desktop Action operator]
+Name=Resume with operator window
+Exec=@BIN@ --resume --operator
+
+[Desktop Action windowed]
+Name=New colony in a window
+Exec=@BIN@ --windowed --operator

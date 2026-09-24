@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a6a48"/>
+      <stop offset="1" stop-color="#5a4130"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="232" height="232" rx="36" fill="#1b1917"/>
+  <rect x="30" y="30" width="196" height="196" rx="18" fill="#c9c3b8"/>
+  <path d="M30 96 C70 88 110 100 150 92 C180 86 205 94 226 90 V208 a18 18 0 0 1 -18 18 H48 a18 18 0 0 1 -18 -18 Z" fill="url(#soil)"/>
+  <path d="M128 92 C126 120 108 136 96 160 C88 176 92 192 104 204 M112 142 C130 150 150 148 170 164 M100 176 C84 180 70 174 58 182" fill="none" stroke="#1d1410" stroke-width="10" stroke-linecap="round"/>
+  <g transform="translate(150 62) rotate(-18)">
+    <ellipse cx="-26" cy="0" rx="17" ry="11" fill="#1a1210"/>
+    <ellipse cx="0" cy="0" rx="12" ry="7" fill="#2a1712"/>
+    <ellipse cx="20" cy="0" rx="10" ry="9" fill="#1a1210"/>
+    <g stroke="#1a1210" stroke-width="3" stroke-linecap="round" fill="none">
+      <path d="M4 -5 L14 -16 L26 -20 M0 -6 L-2 -19 L-4 -26 M-6 -5 L-16 -16 L-28 -22"/>
+      <path d="M4 5 L14 16 L26 20 M0 6 L-2 19 L-4 26 M-6 5 L-16 16 L-28 22"/>
+      <path d="M27 -4 L34 -12 L44 -14 M27 4 L34 12 L44 14"/>
+    </g>
+  </g>
+</svg>

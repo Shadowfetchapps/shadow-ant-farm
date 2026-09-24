@@ -1,0 +1,8 @@
+build/
+build-*/
+dist/
+game/.godot/
+game/bin/*.so
+*.antfarm
+*.tmp
+__pycache__/
